@@ -33,7 +33,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter')
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compile("org.jetbrains.kotlin:kotlin-reflect")
-    compile ('org.rxtx:rxtx:2.1.7')
+    compile('org.rxtx:rxtx:2.1.7')
     compile project(':sentient-light-hub-common')
 }
 
