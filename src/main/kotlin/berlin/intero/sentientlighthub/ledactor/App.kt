@@ -1,5 +1,7 @@
 package berlin.intero.sentientlighthub.ledactor
 
+import berlin.intero.sentientlighthub.common.tasks.SerialDiscoverPortsAsyncTask
+import berlin.intero.sentientlighthub.common.tasks.SerialPortCloseAsyncTask
 import berlin.intero.sentientlighthub.common.tasks.SerialPortOpenAsyncTask
 import berlin.intero.sentientlighthub.common.tasks.SerialSetLEDAsyncTask
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -21,10 +23,10 @@ fun main(args: Array<String>) {
     // val portName = "COM8" // Windows
     val portName = "/dev/ttyUSB1" // Linux
     val repeatCount = 10
-    val ledCount = 10
+    val ledCount = 21
 
+    SyncTaskExecutor().execute(SerialDiscoverPortsAsyncTask())
     SyncTaskExecutor().execute(SerialPortOpenAsyncTask(portName))
-    Thread.sleep(5000)
 
     repeat(repeatCount) {
         repeat(ledCount) {
@@ -38,5 +40,6 @@ fun main(args: Array<String>) {
     }
 
     Thread.sleep(5000)
-    SyncTaskExecutor().execute(SerialPortOpenAsyncTask(portName))
+    SyncTaskExecutor().execute(SerialPortCloseAsyncTask(portName))
+
 }
