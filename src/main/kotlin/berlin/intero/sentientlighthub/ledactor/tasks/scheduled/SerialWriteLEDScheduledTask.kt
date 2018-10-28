@@ -8,6 +8,7 @@ import berlin.intero.sentientlighthub.common.tasks.MQTTSubscribeAsyncTask
 import berlin.intero.sentientlighthub.common.tasks.SerialPortOpenAsyncTask
 import berlin.intero.sentientlighthub.common.tasks.SerialSetLEDAsyncTask
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttMessage
@@ -64,30 +65,37 @@ class SerialWriteLEDScheduledTask {
 
         values.forEach { topic, value ->
 
-            val stripID = topic.split('/')[3]
-            val ledID = topic.split('/')[4]
-
-            val actor = ConfigurationService.getActor(stripID, ledID)
-
-            log.fine("${SentientProperties.Color.VALUE}topic $topic / val $value / strip $stripID / ledID $ledID / actor ${actor?.port} ${SentientProperties.Color.RESET}")
-
-            if (actor != null && value != valuesHistoric.get(topic)) {
-                valuesHistoric.set(topic, value)
-                val portName = actor.port
-
+            try {
                 // Parse payload
                 val payload = Gson().fromJson(value, SingleLEDPayload::class.java)
+                log.fine("payload ${payload}")
+                log.fine("payload stripID ${payload.stripId}")
+                log.fine("payload ledID ${payload.ledId}")
                 log.fine("payload warmWhite ${payload.warmWhite}")
                 log.fine("payload coldWhite ${payload.coldWhite}")
                 log.fine("payload amber ${payload.amber}")
 
-                // Call SerialSetLEDAsyncTask
-                SyncTaskExecutor().execute(SerialSetLEDAsyncTask(
-                        portName,
-                        ledID.toShort(),
-                        PayloadConverterService.convertStringToByte(payload.warmWhite),
-                        PayloadConverterService.convertStringToByte(payload.coldWhite),
-                        PayloadConverterService.convertStringToByte(payload.amber)))
+                val stripId = payload.stripId
+                val ledId = payload.ledId
+
+                val actor = ConfigurationService.getActor(stripId, ledId)
+
+                log.fine("${SentientProperties.Color.VALUE}topic $topic / val $value / strip $stripId / ledID $ledId / actor ${actor?.port} ${SentientProperties.Color.RESET}")
+
+                if (actor != null && value != valuesHistoric.get(topic)) {
+                    valuesHistoric.set(topic, value)
+                    val portName = actor.port
+
+                    // Call SerialSetLEDAsyncTask
+                    SyncTaskExecutor().execute(SerialSetLEDAsyncTask(
+                            portName,
+                            ledId.toShort(),
+                            PayloadConverterService.convertStringToByte(payload.warmWhite),
+                            PayloadConverterService.convertStringToByte(payload.coldWhite),
+                            PayloadConverterService.convertStringToByte(payload.amber)))
+                }
+            } catch (jse: JsonSyntaxException) {
+                log.severe("${SentientProperties.Color.ERROR}${jse}${SentientProperties.Color.RESET}")
             }
         }
     }
