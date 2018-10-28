@@ -71,7 +71,8 @@ class SerialWriteLEDScheduledTask {
 
             log.fine("${SentientProperties.Color.VALUE}topic $topic / val $value / strip $stripID / ledID $ledID / actor ${actor?.port} ${SentientProperties.Color.RESET}")
 
-            if (actor != null && value != valuesHistoric[topic]) {
+            if (actor != null && value != valuesHistoric.get(topic)) {
+                valuesHistoric.set(topic, value)
                 val portName = actor.port
 
                 // Parse payload
@@ -88,8 +89,6 @@ class SerialWriteLEDScheduledTask {
                         PayloadConverterService.convertStringToByte(payload.coldWhite),
                         PayloadConverterService.convertStringToByte(payload.amber)))
             }
-
-            valuesHistoric[topic] = value
         }
     }
 }
